@@ -1,0 +1,194 @@
+# Community Rewards Token (CRT)
+A comprehensive SIP-010 compliant fungible token smart contract designed for fan communities on the Stacks blockchain. The CRT token enables reward distribution, membership benefits, and decentralized governance with robust security features.
+
+##  Table of Contents
+- [Features](#features)
+- [Token Specifications](#token-specifications)
+- [Contract Architecture](#contract-architecture)
+- [Functions Overview](#functions-overview)
+- [Deployment](#deployment)
+- [Usage Examples](#usage-examples)
+- [Security Features](#security-features)
+- [Testing](#testing)
+- [Contributing](#contributing)
+
+##  Features
+- **SIP-010 Compliance**: Full implementation of the Stacks Improvement Proposal 010 fungible token standard
+- **Administrative Controls**: Multi-admin system with owner privileges
+- **Security Features**: Comprehensive input validation, pause/unpause functionality, and event logging
+- **Token Management**: Mint, burn, transfer, and allowance operations
+- **Community Focus**: Designed specifically for fan communities and reward distribution
+- **Comprehensive Logging**: All operations emit detailed events for transparency
+
+##  Token Specifications
+
+| Property | Value |
+|----------|-------|
+| **Name** | Community Rewards Token |
+| **Symbol** | CRT |
+| **Decimals** | 8 |
+| **Max Supply** | 1,000,000,000,000,000 (1 quadrillion) |
+| **Initial Supply** | 10,000,000,000,000 (10 trillion) |
+
+## Contract Architecture
+### Core Components
+
+1. **Fungible Token**: SIP-010 compliant token implementation
+2. **Administrative System**: Owner and multi-admin privilege management
+3. **Allowance System**: ERC-20 style approve/transfer-from functionality
+4. **Security Layer**: Input validation, pause controls, and access restrictions
+5. **Event System**: Comprehensive logging for all operations
+
+## Error Codes
+| Code | Constant | Description |
+|------|----------|-------------|
+| 100 | `ERR-UNAUTHORIZED-ACCESS-DENIED` | Unauthorized access attempt |
+| 101 | `ERR-INSUFFICIENT-TOKEN-BALANCE` | Insufficient token balance |
+| 102 | `ERR-INVALID-AMOUNT-PROVIDED` | Invalid amount provided |
+| 103 | `ERR-RESOURCE-ALREADY-EXISTS` | Resource already exists |
+| 104 | `ERR-RESOURCE-NOT-FOUND` | Resource not found |
+| 105 | `ERR-TRANSFER-OPERATION-FAILED` | Transfer operation failed |
+| 106 | `ERR-MINT-OPERATION-FAILED` | Mint operation failed |
+| 107 | `ERR-BURN-OPERATION-FAILED` | Burn operation failed |
+| 108 | `ERR-ALLOWANCE-LIMIT-EXCEEDED` | Allowance limit exceeded |
+| 109 | `ERR-SAME-PRINCIPAL-OPERATION` | Same principal operation not allowed |
+| 110 | `ERR-MAXIMUM-SUPPLY-EXCEEDED` | Maximum supply exceeded |
+| 111 | `ERR-CONTRACT-OPERATIONS-PAUSED` | Contract operations paused |
+| 112 | `ERR-INVALID-PRINCIPAL` | Invalid principal address |
+| 113 | `ERR-INVALID-URI` | Invalid URI format |
+
+##  Functions Overview
+### SIP-010 Standard Functions
+
+#### Read-Only Functions
+- `get-name()` - Returns token name
+- `get-symbol()` - Returns token symbol
+- `get-decimals()` - Returns decimal places
+- `get-total-supply()` - Returns current total supply
+- `get-balance(principal)` - Returns balance of specified address
+- `get-token-uri()` - Returns token metadata URI
+
+#### Public Functions
+- `transfer(amount, sender, recipient, memo)` - Transfer tokens between addresses
+
+### Extended Functionality
+#### Allowance Management
+- `approve(spender, amount)` - Approve spending allowance
+- `transfer-from(amount, owner, recipient, memo)` - Transfer on behalf of owner
+- `get-allowance-amount(owner, spender)` - Get current allowance
+
+#### Token Supply Management (Admin Only)
+- `mint(amount, recipient)` - Mint new tokens
+- `burn(amount)` - Burn tokens from caller's balance
+
+#### Administrative Functions (Owner/Admin Only)
+- `add-admin(new-admin)` - Add new administrator (Owner only)
+- `remove-admin(admin)` - Remove administrator (Owner only)
+- `set-token-uri(uri)` - Set token metadata URI
+- `pause-contract()` - Pause all contract operations
+- `unpause-contract()` - Resume contract operations
+
+#### Query Functions
+- `is-administrator(principal)` - Check if address is admin
+- `is-paused()` - Check if contract is paused
+
+##  Deployment
+### Prerequisites
+- [Clarinet](https://docs.hiro.so/stacks/clarinet) installed
+- Stacks wallet configured
+- STX for deployment costs
+
+### Deploy Steps
+
+1. **Clone and Setup**
+```bash
+git clone <repository-url>
+cd community-rewards-token
+clarinet check
+```
+
+2. **Test Locally**
+```bash
+clarinet console
+```
+
+3. **Deploy to Testnet**
+```bash
+clarinet publish --testnet
+```
+
+4. **Deploy to Mainnet**
+```bash
+clarinet publish --mainnet
+```
+
+##  Usage Examples
+### Basic Token Operations
+
+```clarity
+;; Check token balance
+(contract-call? .community-rewards-token get-balance 'SP1HTBVD3S...)
+
+;; Transfer tokens
+(contract-call? .community-rewards-token transfer u1000000000 tx-sender 'SP2HTBVD... none)
+
+;; Approve spending
+(contract-call? .community-rewards-token approve 'SP3HTBVD... u5000000000)
+```
+
+### Administrative Operations
+```clarity
+;; Mint tokens (admin only)
+(contract-call? .community-rewards-token mint u1000000000 'SP1HTBVD...)
+
+;; Add new administrator (owner only)
+(contract-call? .community-rewards-token add-admin 'SP2HTBVD...)
+
+;; Pause contract (admin only)
+(contract-call? .community-rewards-token pause-contract)
+```
+### Community Reward Distribution Example
+```clarity
+;; Distribute rewards to multiple community members
+(define-public (distribute-community-rewards (recipients (list 100 principal)) (amounts (list 100 uint)))
+  (begin
+    (asserts! (is-admin) ERR-UNAUTHORIZED-ACCESS-DENIED)
+    (map distribute-single-reward recipients amounts)
+    (ok true)
+  )
+)
+
+(define-private (distribute-single-reward (recipient principal) (amount uint))
+  (contract-call? .community-rewards-token mint amount recipient)
+)
+```
+##  Security Features
+### Input Validation
+- **Principal Validation**: Prevents operations with invalid addresses
+- **Amount Bounds**: Ensures amounts don't exceed maximum supply
+- **URI Validation**: Validates metadata URI format and length
+- **Same Principal Check**: Prevents self-operations where inappropriate
+
+### Access Control
+- **Owner Privileges**: Only contract owner can add/remove admins
+- **Admin Functions**: Minting and administrative operations restricted to admins
+- **Pause Functionality**: Emergency pause capability for all operations
+
+### Comprehensive Logging
+All operations emit detailed events including:
+- Transaction type and parameters
+- Involved principals
+- Block height
+- Relevant state changes
+
+### Example Event Log
+```json
+{
+  "event-type": "transfer",
+  "sender": "SP1HTBVD3S...",
+  "recipient": "SP2HTBVD3S...",
+  "amount": 1000000000,
+  "memo": null,
+  "block-height": 12345
+}
+```
